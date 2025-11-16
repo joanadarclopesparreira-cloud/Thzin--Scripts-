@@ -1,408 +1,270 @@
--- Thzinx Scripts 👾 - Safe Dev/Admin UI (Client-side)
--- Key: "thzin-scripts"
--- Uso: ferramenta de desenvolvimento / admin no seu próprio jogo.
--- NÃO inclui cheats contra jogadores (sem aimbot, sem auto-parry remotos, etc).
+-- THZINX SCRIPTS V3 👾
+-- Key necessária: thzin-scripts
 
-local KEY_REQUIRED = "thzin-scripts"
+local KEY = "thzin-scripts"
+
+---------------------------------------------------------------------
+-- UI PRINCIPAL
+---------------------------------------------------------------------
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
-local UIS = game:GetService("UserInputService")
-
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- helpers
-local function uicorner(parent, radius) local c = Instance.new("UICorner", parent); c.CornerRadius = UDim.new(0, radius or 8); return c end
-local function uistroke(parent, color, thickness) local s = Instance.new("UIStroke", parent); s.Color = color or Color3.fromRGB(100,200,255); s.Thickness = thickness or 1; return s end
+local ScreenGui = Instance.new("ScreenGui", PlayerGui)
+ScreenGui.Name = "ThzinV3"
+ScreenGui.ResetOnSpawn = false
 
--- Parent GUI
-local screen = Instance.new("ScreenGui")
-screen.Name = "ThzinxScriptsGui"
-screen.Parent = PlayerGui
-screen.ResetOnSpawn = false
+-- Fundo inicial (tela da KEY)
+local KeyFrame = Instance.new("Frame", ScreenGui)
+KeyFrame.Size = UDim2.new(0, 350, 0, 200)
+KeyFrame.Position = UDim2.new(0.5, -175, 0.5, -100)
+KeyFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+KeyFrame.BorderSizePixel = 0
+Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0,12)
 
--- Toggle button
-local toggleBtn = Instance.new("TextButton", screen)
-toggleBtn.Size = UDim2.new(0,56,0,56)
-toggleBtn.Position = UDim2.new(0,14,0.5,-28)
-toggleBtn.Text = "👾"
-toggleBtn.Font = Enum.Font.SourceSansBold
-toggleBtn.TextSize = 28
-toggleBtn.BackgroundColor3 = Color3.fromRGB(30,130,200)
-toggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
-uicorner(toggleBtn, 12)
+local Title = Instance.new("TextLabel", KeyFrame)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Text = "THZINX SCRIPTS 👾"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
+Title.TextColor3 = Color3.fromRGB(255,255,255)
 
--- Main Panel
-local main = Instance.new("Frame", screen)
-main.Size = UDim2.new(0,420,0,520)
-main.Position = UDim2.new(0.5,-210,0.5,-260)
-main.AnchorPoint = Vector2.new(0.5,0.5)
-main.BackgroundColor3 = Color3.fromRGB(18,20,28)
-main.BackgroundTransparency = 0.15
-main.Visible = false
-uicorner(main, 14)
-uistroke(main, Color3.fromRGB(80,170,255), 2)
+local KeyBox = Instance.new("TextBox", KeyFrame)
+KeyBox.Size = UDim2.new(0.9,0,0,40)
+KeyBox.Position = UDim2.new(0.05,0,0.38,0)
+KeyBox.PlaceholderText = "Digite a KEY..."
+KeyBox.Font = Enum.Font.GothamBold
+KeyBox.TextSize = 18
+KeyBox.BackgroundColor3 = Color3.fromRGB(40,40,50)
+KeyBox.TextColor3 = Color3.fromRGB(255,255,255)
+Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0,10)
 
--- Title
-local title = Instance.new("TextLabel", main)
-title.Size = UDim2.new(1,-24,0,48)
-title.Position = UDim2.new(0,12,0,8)
-title.BackgroundTransparency = 1
-title.Text = "Thzinx Scripts 👾"
-title.Font = Enum.Font.GothamBold
-title.TextSize = 20
-title.TextColor3 = Color3.fromRGB(220,240,255)
-title.TextXAlignment = Enum.TextXAlignment.Left
+local Confirm = Instance.new("TextButton", KeyFrame)
+Confirm.Size = UDim2.new(0.9,0,0,40)
+Confirm.Position = UDim2.new(0.05,0,0.7,0)
+Confirm.Text = "Confirmar Key"
+Confirm.Font = Enum.Font.GothamBold
+Confirm.TextSize = 18
+Confirm.BackgroundColor3 = Color3.fromRGB(80,0,160)
+Confirm.TextColor3 = Color3.fromRGB(255,255,255)
+Instance.new("UICorner", Confirm).CornerRadius = UDim.new(0,10)
 
-local info = Instance.new("TextLabel", main)
-info.Size = UDim2.new(1,-24,0,20)
-info.Position = UDim2.new(0,12,0,36)
-info.BackgroundTransparency = 1
-info.Text = "Digite a key para acessar"
-info.Font = Enum.Font.Gotham
-info.TextSize = 14
-info.TextColor3 = Color3.fromRGB(170,200,230)
-info.TextXAlignment = Enum.TextXAlignment.Left
+---------------------------------------------------------------------
+-- PAINEL PRINCIPAL (fica oculto até a KEY ser aceita)
+---------------------------------------------------------------------
 
--- Key input
-local keyBox = Instance.new("TextBox", main)
-keyBox.Size = UDim2.new(0.64,0,0,36)
-keyBox.Position = UDim2.new(0.03,0,0.12,0)
-keyBox.PlaceholderText = "Digite a key..."
-keyBox.Font = Enum.Font.Gotham
-keyBox.TextSize = 16
-keyBox.BackgroundColor3 = Color3.fromRGB(22,28,36)
-uicorner(keyBox, 8)
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 420, 0, 460)
+Main.Position = UDim2.new(0.5, -210, 0.5, -230)
+Main.BackgroundColor3 = Color3.fromRGB(25, 0, 45)
+Main.Visible = false
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0,12)
 
-local keyBtn = Instance.new("TextButton", main)
-keyBtn.Size = UDim2.new(0.28,0,0,36)
-keyBtn.Position = UDim2.new(0.69,0,0.12,0)
-keyBtn.Text = "VALIDAR"
-keyBtn.Font = Enum.Font.GothamBold
-keyBtn.TextSize = 16
-keyBtn.BackgroundColor3 = Color3.fromRGB(0,150,220)
-uicorner(keyBtn, 8)
+local Titulo2 = Instance.new("TextLabel", Main)
+Titulo2.Size = UDim2.new(1, 0, 0, 40)
+Titulo2.BackgroundTransparency = 1
+Titulo2.Text = "THZINX MENU 👾"
+Titulo2.Font = Enum.Font.GothamBold
+Titulo2.TextSize = 22
+Titulo2.TextColor3 = Color3.fromRGB(255,255,255)
 
--- Glass area for buttons
-local glass = Instance.new("Frame", main)
-glass.Size = UDim2.new(1,-24,1,-120)
-glass.Position = UDim2.new(0,12,0,76)
-glass.BackgroundTransparency = 0.45
-glass.BackgroundColor3 = Color3.fromRGB(10,12,16)
-uicorner(glass, 12)
+---------------------------------------------------------------------
+-- FUNÇÃO PARA CRIAR BOTÕES
+---------------------------------------------------------------------
 
--- Buttons factory
-local function createBtn(text, r,c)
-    local b = Instance.new("TextButton", glass)
-    b.Size = UDim2.new(0.46,0,0,36)
-    local col = 0.03 + ( (c-1) * 0.48 )
-    local row = 0.02 + ( (r-1) * 0.09 )
-    b.Position = UDim2.new(col,0,row,0)
-    b.Text = text
-    b.Font = Enum.Font.Gotham
-    b.TextSize = 14
-    b.BackgroundColor3 = Color3.fromRGB(20,26,34)
-    uicorner(b, 8)
-    uistroke(b, Color3.fromRGB(60,150,255), 1)
+function NovaOpcao(txt, pos)
+    local b = Instance.new("TextButton", Main)
+    b.Size = UDim2.new(0.9,0,0,40)
+    b.Position = UDim2.new(0.05,0,pos,0)
+    b.Text = txt
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 18
+    b.BackgroundColor3 = Color3.fromRGB(100,0,180)
+    b.TextColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
     return b
 end
 
--- create buttons layout
-local btn_save = createBtn("Salvar Localização", 1,1)
-local btn_return = createBtn("Voltar para Localização", 1,2)
-local btn_markBrains = createBtn("Marcar 'brains' (objetos)", 2,1)
-local btn_radar = createBtn("Toggle Radar (objetos)", 2,2)
-local btn_invisible = createBtn("Invisibilidade (local)", 3,1)
-local btn_tele_invisible = createBtn("Teleporte Invisível (local)", 3,2)
+---------------------------------------------------------------------
+-- SISTEMA DE KEY
+---------------------------------------------------------------------
 
--- states
-local AccessGranted = false
-local savedCFrame = nil
-local markersFolder = Instance.new("Folder", workspace); markersFolder.Name = "ThzinxMarkers"
-local radarOn = false
+Confirm.MouseButton1Click:Connect(function()
+    if KeyBox.Text == KEY then
+        Confirm.Text = "Aprovado ✔"
+        Confirm.BackgroundColor3 = Color3.fromRGB(0,200,100)
+        task.wait(0.6)
 
--- small UI feedback
-local function setInfo(txt, time)
-    info.Text = txt or ""
-    if time and time>0 then
-        delay(time, function()
-            if AccessGranted then info.Text = "Funções liberadas" else info.Text = "Digite a key para acessar" end
-        end)
-    end
-end
-
--- toggle main menu (with simple animation)
-local menuOpen = false
-local function animateOpen()
-    main.Visible = true
-    main.BackgroundTransparency = 1
-    TweenService:Create(main, TweenInfo.new(0.28, Enum.EasingStyle.Quad), {BackgroundTransparency = 0.15}):Play()
-end
-local function animateClose()
-    TweenService:Create(main, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
-    delay(0.18, function() main.Visible = false end)
-end
-
-toggleBtn.MouseButton1Click:Connect(function()
-    menuOpen = not menuOpen
-    if menuOpen then animateOpen() else animateClose() end
-end)
-
-UIS.InputBegan:Connect(function(inp, gpe)
-    if gpe then return end
-    if inp.KeyCode == Enum.KeyCode.L then
-        toggleBtn:Activate()
-    end
-end)
-
--- Key validation
-keyBtn.MouseButton1Click:Connect(function()
-    if keyBox.Text == KEY_REQUIRED then
-        AccessGranted = true
-        keyBtn.Text = "ACESSO ✔"
-        keyBtn.BackgroundColor3 = Color3.fromRGB(0,200,120)
-        setInfo("Key válida — funções liberadas", 2)
-        -- auto open menu with animation
-        animateOpen()
-        menuOpen = true
+        KeyFrame:Destroy()
+        Main.Visible = true
     else
-        keyBtn.Text = "ERRADO ❌"
-        keyBtn.BackgroundColor3 = Color3.fromRGB(220,70,70)
-        setInfo("Key inválida", 1.2)
-        delay(1.2, function()
-            if not AccessGranted then
-                keyBtn.Text = "VALIDAR"
-                keyBtn.BackgroundColor3 = Color3.fromRGB(0,150,220)
-                setInfo("Digite a key para acessar")
-            end
-        end)
+        Confirm.Text = "KEY INCORRETA ❌"
+        Confirm.BackgroundColor3 = Color3.fromRGB(200,40,40)
+        task.wait(1)
+        Confirm.Text = "Confirmar Key"
+        Confirm.BackgroundColor3 = Color3.fromRGB(80,0,160)
     end
 end)
 
--- Save location (client-only)
-btn_save.MouseButton1Click:Connect(function()
-    if not AccessGranted then setInfo("Valide a key primeiro",2); return end
+---------------------------------------------------------------------
+-- FUNÇÃO: MARCAR LOCALIZAÇÃO
+---------------------------------------------------------------------
+
+local SavedCFrame = nil
+
+local Save = NovaOpcao("Salvar Localização", 0.18)
+Save.MouseButton1Click:Connect(function()
     local char = LocalPlayer.Character
-    if not char then setInfo("Personagem não encontrado",2); return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then setInfo("HumanoidRootPart ausente",2); return end
-    savedCFrame = hrp.CFrame
-    setInfo("Localização salva ✔",2)
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        SavedCFrame = char.HumanoidRootPart.CFrame
+        Titulo2.Text = "Localização salva ✔"
+    end
 end)
 
--- Smooth teleport with animation overlay
-local overlay = Instance.new("Frame", screen)
-overlay.Size = UDim2.new(1,0,1,0)
-overlay.BackgroundTransparency = 1
-overlay.Visible = false
+---------------------------------------------------------------------
+-- VOLTAR PARA LOCALIZAÇÃO (com animação)
+---------------------------------------------------------------------
 
-local overlayText = Instance.new("TextLabel", overlay)
-overlayText.Size = UDim2.new(1,0,0,60)
-overlayText.Position = UDim2.new(0,0,0.5,-30)
-overlayText.BackgroundTransparency = 1
-overlayText.Font = Enum.Font.GothamBold
-overlayText.TextSize = 22
-overlayText.TextColor3 = Color3.fromRGB(255,255,255)
-overlayText.Text = ""
-
-local function smoothTeleportTo(cframe)
-    overlay.Visible = true
-    overlay.BackgroundTransparency = 0.6
-    overlay.BackgroundColor3 = Color3.fromRGB(0,0,0)
-    overlayText.Text = "Voltando para local..."
-    local char = LocalPlayer.Character
-    if not char then
-        overlay.Visible = false
-        setInfo("Personagem ausente",2)
+local Tp = NovaOpcao("Voltar à Localização", 0.30)
+Tp.MouseButton1Click:Connect(function()
+    if not SavedCFrame then
+        Titulo2.Text = "Nenhum local salvo"
         return
     end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then overlay.Visible = false; setInfo("HRP ausente",2); return end
 
-    -- lerp in steps to saved CFrame
-    local steps = 14
-    for i = 1, steps do
-        if not hrp.Parent then break end
-        hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)
-        local a = i / steps
-        hrp.CFrame = hrp.CFrame:Lerp(cframe, a)
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    for i = 1,20 do
+        hrp.CFrame = hrp.CFrame:Lerp(SavedCFrame, 0.25)
         task.wait(0.03)
     end
-    hrp.CFrame = cframe
-    overlay.Visible = false
-    setInfo("Teletransportado ✔", 2)
-end
 
-btn_return.MouseButton1Click:Connect(function()
-    if not AccessGranted then setInfo("Valide a key primeiro",2); return end
-    if not savedCFrame then setInfo("Nenhuma localização salva",2); return end
-    -- call the smooth teleport (wrapped to not block)
-    task.spawn(function() smoothTeleportTo(savedCFrame) end)
+    hrp.CFrame = SavedCFrame
+    Titulo2.Text = "Retornado ✔"
 end)
 
--- Mark 'brain' objects (ESP for objects only)
-local function markBrains()
-    -- remove old
-    for _,c in pairs(markersFolder:GetChildren()) do pcall(function() c:Destroy() end) end
-    local found = 0
-    for _,v in pairs(workspace:GetDescendants()) do
-        if v:IsA("BasePart") and tostring(v.Name):lower():find("brain") then
-            if not v:FindFirstChild("Thzinx_BrainMark") then
-                local bill = Instance.new("BillboardGui", v)
-                bill.Name = "Thzinx_BrainMark"
-                bill.Size = UDim2.new(0,60,0,40)
-                bill.Adornee = v
-                bill.AlwaysOnTop = true
-                bill.Parent = markersFolder
-                local lbl = Instance.new("TextLabel", bill)
-                lbl.Size = UDim2.new(1,0,1,0)
-                lbl.BackgroundTransparency = 1
-                lbl.Text = "❗ Brain"
-                lbl.Font = Enum.Font.GothamBold
-                lbl.TextSize = 14
-                lbl.TextColor3 = Color3.fromRGB(255,120,80)
-                found = found + 1
-            end
-        end
-    end
-    setInfo("Brain objects marcados: "..tostring(found), 3)
-end
+---------------------------------------------------------------------
+-- INVISIBILIDADE (client-side simples)
+---------------------------------------------------------------------
 
-btn_markBrains.MouseButton1Click:Connect(function()
-    if not AccessGranted then setInfo("Valide a key primeiro",2); return end
-    markBrains()
-end)
+local Invisible = false
+local Invis = NovaOpcao("Invisível ON/OFF", 0.42)
 
--- Radar: create simple distance labels for objects found (non-player)
-local radarMarkers = {}
-local function enableRadar()
-    -- clear
-    for _,m in pairs(radarMarkers) do pcall(function() m:Destroy() end) end
-    radarMarkers = {}
-
-    -- find interesting objects (e.g., named brain)
-    for _,v in pairs(workspace:GetDescendants()) do
-        if v:IsA("BasePart") and tostring(v.Name):lower():find("brain") then
-            if v:FindFirstChildOfClass("Attachment") == nil then
-                -- create a lightweight billboard for radar
-                local gui = Instance.new("BillboardGui")
-                gui.Size = UDim2.new(0,120,0,34)
-                gui.Adornee = v
-                gui.AlwaysOnTop = true
-                gui.Parent = markersFolder
-                local frame = Instance.new("Frame", gui)
-                frame.Size = UDim2.new(1,0,1,0)
-                frame.BackgroundTransparency = 0.6
-                frame.BackgroundColor3 = Color3.fromRGB(0,120,200)
-                uicorner(frame, 8)
-                local txt = Instance.new("TextLabel", frame)
-                txt.Size = UDim2.new(1,-8,1, -4)
-                txt.Position = UDim2.new(0,4,0,2)
-                txt.BackgroundTransparency = 1
-                txt.Font = Enum.Font.Gotham
-                txt.TextSize = 13
-                txt.TextColor3 = Color3.fromRGB(240,255,255)
-                txt.Text = v.Name.." • 0m"
-                table.insert(radarMarkers, gui)
-
-                -- update routine
-                local conn
-                conn = RunService.RenderStepped:Connect(function()
-                    if not v.Parent then
-                        if conn then conn:Disconnect() end
-                        if gui and gui.Parent then gui:Destroy() end
-                        return
-                    end
-                    local myhrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                    if myhrp then
-                        local d = (myhrp.Position - v.Position).Magnitude
-                        txt.Text = v.Name.." • "..tostring(math.floor(d)).."m"
-                    end
-                end)
-            end
-        end
-    end
-end
-
-local function disableRadar()
-    for _,m in pairs(radarMarkers) do pcall(function() m:Destroy() end) end
-    radarMarkers = {}
-end
-
-btn_radar.MouseButton1Click:Connect(function()
-    if not AccessGranted then setInfo("Valide a key primeiro",2); return end
-    radarOn = not radarOn
-    if radarOn then
-        enableRadar()
-        setInfo("Radar ativado",2)
-    else
-        disableRadar()
-        setInfo("Radar desativado",2)
-    end
-end)
-
--- Local invisibility toggle (client-only)
-local invisibleOn = false
-local function setLocalInvisibility(on)
+Invis.MouseButton1Click:Connect(function()
     local char = LocalPlayer.Character
-    if not char then setInfo("Sem personagem",2); return end
-    for _,part in pairs(char:GetDescendants()) do
-        if part:IsA("BasePart") or part:IsA("Decal") or part:IsA("MeshPart") then
-            if on then
-                -- store original transparency in attribute
-                if not part:GetAttribute("thzinx_orig_trans") then
-                    part:SetAttribute("thzinx_orig_trans", part.Transparency or 0)
-                end
-                part.Transparency = 1
-            else
-                local orig = part:GetAttribute("thzinx_orig_trans")
-                if orig then part.Transparency = orig; part:SetAttribute("thzinx_orig_trans", nil) end
-            end
+    if not char then return end
+
+    Invisible = not Invisible
+
+    for _,v in pairs(char:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v.Transparency = Invisible and 1 or 0
+        elseif v:IsA("Decal") then
+            v.Transparency = Invisible and 1 or 0
         end
     end
-    invisibleOn = on
-    setInfo("Invisibilidade local: "..(on and "ON" or "OFF"),2)
-end
 
-btn_invisible.MouseButton1Click:Connect(function()
-    if not AccessGranted then setInfo("Valide a key primeiro",2); return end
-    setLocalInvisibility(not invisibleOn)
+    Titulo2.Text = Invisible and "Invisível ✔" or "Visível ✔"
 end)
 
--- Teleporte invisível (smooth + local invis)
-btn_tele_invisible.MouseButton1Click:Connect(function()
-    if not AccessGranted then setInfo("Valide a key primeiro",2); return end
-    if not savedCFrame then setInfo("Nenhuma posição salva",2); return end
-    -- make invisible locally
-    setLocalInvisibility(true)
-    task.spawn(function() smoothTeleportTo(savedCFrame) end)
-    -- restore invis off after short delay
-    delay(1.0, function()
-        setLocalInvisibility(false)
-    end)
+---------------------------------------------------------------------
+-- ESP BASES + PETS
+---------------------------------------------------------------------
+
+local EspOn = false
+local Esp = NovaOpcao("ESP Bases / Pets", 0.54)
+
+Esp.MouseButton1Click:Connect(function()
+    EspOn = not EspOn
+
+    if EspOn then
+        Titulo2.Text = "ESP ON ✔"
+        
+        for _,obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and (obj.Name:lower():find("base") or obj.Name:lower():find("pet")) then
+                local bill = Instance.new("BillboardGui", obj)
+                bill.Name = "Thzin_Tag"
+                bill.Size = UDim2.new(0,80,0,20)
+                bill.AlwaysOnTop = true
+
+                local txt = Instance.new("TextLabel", bill)
+                txt.Size = UDim2.new(1,0,1,0)
+                txt.Text = obj.Name
+                txt.BackgroundTransparency = 1
+                txt.Font = Enum.Font.GothamBold
+                txt.TextColor3 = Color3.fromRGB(0,255,255)
+                txt.TextScaled = true
+            end
+        end
+
+    else
+        Titulo2.Text = "ESP OFF ❌"
+        for _,v in pairs(workspace:GetDescendants()) do
+            if v.Name == "Thzin_Tag" then v:Destroy() end
+        end
+    end
 end)
 
--- cleanup on respawn: remove markers & radar
-LocalPlayer.CharacterAdded:Connect(function(char)
-    delay(0.5, function()
-        -- remove client-side markers to avoid duplicates
-        for _,c in pairs(markersFolder:GetChildren()) do pcall(function() c:Destroy() end) end
-    end)
+---------------------------------------------------------------------
+-- PROTEÇÃO CONTRA TORRETAS
+---------------------------------------------------------------------
+
+local NoShoot = false
+local Prot = NovaOpcao("Anti-Torreta", 0.66)
+
+Prot.MouseButton1Click:Connect(function()
+    NoShoot = not NoShoot
+    Titulo2.Text = NoShoot and "Torretas bloqueadas ✔" or "Anti-torreta OFF"
+
+    if NoShoot then
+        task.spawn(function()
+            while NoShoot do
+                for _,v in pairs(workspace:GetDescendants()) do
+                    if v.Name:lower():find("turret") or v.Name:lower():find("torreta") then
+                        pcall(function() v:Destroy() end)
+                    end
+                end
+                task.wait(1)
+            end
+        end)
+    end
 end)
 
--- initial animation when script is loaded (small entry animation)
-do
-    main.BackgroundTransparency = 1
-    main.Visible = true
-    main.Position = UDim2.new(0.5,-210,0.3,-260)
-    TweenService:Create(main, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {Position = UDim2.new(0.5,-210,0.5,-260), BackgroundTransparency = 0.15}):Play()
-    delay(0.9, function()
-        TweenService:Create(main, TweenInfo.new(0.28, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
-        delay(0.28, function() main.Visible = false end)
-    end)
-end
+---------------------------------------------------------------------
+-- INVISIBILIDADE AUTO AO PEGAR PET
+---------------------------------------------------------------------
 
--- show that script loaded
-setInfo("Thzinx Scripts carregado. Digite a key para acessar", 4)
+local AutoInv = false
+local Auto = NovaOpcao("Auto Invisível (pet)", 0.78)
+
+Auto.MouseButton1Click:Connect(function()
+    AutoInv = not AutoInv
+    Titulo2.Text = AutoInv and "Auto invisível ON" or "Auto invisível OFF"
+
+    if AutoInv then
+        task.spawn(function()
+            while AutoInv do
+                for _,v in pairs(LocalPlayer.Backpack:GetChildren()) do
+                    if v.Name:lower():find("brain") then
+                        -- invisibilidade imediata
+                        LocalPlayer.Character.HumanoidRootPart.Transparency = 1
+                        for _,p in pairs(LocalPlayer.Character:GetDescendants()) do
+                            if p:IsA("BasePart") then p.Transparency = 1 end
+                        end
+                    end
+                end
+                task.wait(0.2)
+            end
+        end)
+    end
+end)
+
+---------------------------------------------------------------------
+-- FIM DO SCRIPT
+---------------------------------------------------------------------
+print("THZIN V3 carregado ✔")
