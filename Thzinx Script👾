@@ -1,0 +1,176 @@
+--// THZIN SCRIPT 👾 - V2 FINAL
+--// Criado para o jogo do Thayler
+
+local KEY_REQUIRED = "thzinpremium"
+
+-- Interface principal
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
+
+-- Janela principal
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 350, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -175, 0.5, -200)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Visible = false
+MainFrame.Parent = ScreenGui
+
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 15)
+
+local stroke = Instance.new("UIStroke")
+stroke.Parent = MainFrame
+stroke.Color = Color3.fromRGB(0, 155, 255)
+stroke.Thickness = 2
+
+-- Título
+local Title = Instance.new("TextLabel")
+Title.Parent = MainFrame
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Text = "THZIN SCRIPT 👾"
+Title.TextColor3 = Color3.fromRGB(0, 180, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 24
+
+-- Botão de abrir/fechar
+local Toggle = Instance.new("TextButton")
+Toggle.Parent = ScreenGui
+Toggle.Size = UDim2.new(0, 60, 0, 60)
+Toggle.Position = UDim2.new(0, 20, 0.5, -30)
+Toggle.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+Toggle.Text = "👾"
+Toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+Toggle.Font = Enum.Font.GothamBold
+Toggle.TextSize = 28
+Instance.new("UICorner", Toggle).CornerRadius = UDim.new(0, 15)
+
+local open = false
+Toggle.MouseButton1Click:Connect(function()
+	open = not open
+	MainFrame.Visible = open
+end)
+
+-- Caixa de Key
+local KeyBox = Instance.new("TextBox")
+KeyBox.Parent = MainFrame
+KeyBox.Size = UDim2.new(0.9, 0, 0, 40)
+KeyBox.Position = UDim2.new(0.05, 0, 0.15, 0)
+KeyBox.PlaceholderText = "Digite a Key..."
+KeyBox.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyBox.Font = Enum.Font.Gotham
+KeyBox.TextSize = 18
+Instance.new("UICorner", KeyBox)
+
+local KeyButton = Instance.new("TextButton")
+KeyButton.Parent = MainFrame
+KeyButton.Size = UDim2.new(0.9, 0, 0, 40)
+KeyButton.Position = UDim2.new(0.05, 0, 0.27, 0)
+KeyButton.Text = "Validar Key"
+KeyButton.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+KeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyButton.Font = Enum.Font.GothamBold
+KeyButton.TextSize = 20
+Instance.new("UICorner", KeyButton)
+
+local Verified = false
+
+KeyButton.MouseButton1Click:Connect(function()
+	if KeyBox.Text == KEY_REQUIRED then
+		Verified = true
+		KeyButton.Text = "Acesso Liberado ✔"
+		KeyButton.BackgroundColor3 = Color3.fromRGB(0, 255, 110)
+	else
+		KeyButton.Text = "Key Incorreta ❌"
+		KeyButton.BackgroundColor3 = Color3.fromRGB(255, 40, 40)
+	end
+end)
+
+-- Salvar Localização
+local savedLocation = nil
+
+local Save = Instance.new("TextButton")
+Save.Parent = MainFrame
+Save.Size = UDim2.new(0.9, 0, 0, 40)
+Save.Position = UDim2.new(0.05, 0, 0.40, 0)
+Save.Text = "Salvar Localização"
+Save.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+Save.TextColor3 = Color3.fromRGB(255, 255, 255)
+Save.Font = Enum.Font.GothamBold
+Save.TextSize = 20
+Instance.new("UICorner", Save)
+
+Save.MouseButton1Click:Connect(function()
+	if Verified then
+		local hrp = game.Players.LocalPlayer.Character.HumanoidRootPart
+		savedLocation = hrp.CFrame
+		Save.Text = "Localização Salva ✔"
+	end
+end)
+
+-- Teleport Suave
+local Tp = Instance.new("TextButton")
+Tp.Parent = MainFrame
+Tp.Size = UDim2.new(0.9, 0, 0, 40)
+Tp.Position = UDim2.new(0.05, 0, 0.52, 0)
+Tp.Text = "Voltar Para Localização"
+Tp.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+Tp.TextColor3 = Color3.fromRGB(255, 255, 255)
+Tp.Font = Enum.Font.GothamBold
+Tp.TextSize = 20
+Instance.new("UICorner", Tp)
+
+Tp.MouseButton1Click:Connect(function()
+	if Verified and savedLocation then
+		local hrp = game.Players.LocalPlayer.Character.HumanoidRootPart
+		for i = 1, 15 do
+			hrp.CFrame = hrp.CFrame:Lerp(savedLocation, 0.25)
+			task.wait(0.02)
+		end
+	end
+end)
+
+-- RADAR NEON
+local RadarFolder = Instance.new("Folder")
+RadarFolder.Parent = ScreenGui
+RadarFolder.Name = "Radar"
+
+function createRadar(plr)
+	if plr == game.Players.LocalPlayer then return end
+	if not plr.Character then plr.CharacterAdded:Wait() end
+
+	local marker = Instance.new("BillboardGui")
+	marker.Parent = RadarFolder
+	marker.Adornee = plr.Character:WaitForChild("HumanoidRootPart")
+	marker.Size = UDim2.new(4, 0, 4, 0)
+	marker.AlwaysOnTop = true
+
+	local icon = Instance.new("Frame")
+	icon.Parent = marker
+	icon.Size = UDim2.new(1, 0, 1, 0)
+	icon.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+	icon.BackgroundTransparency = 0.35
+	Instance.new("UICorner", icon).CornerRadius = UDim.new(1, 0)
+
+	local name = Instance.new("TextLabel")
+	name.Parent = icon
+	name.Size = UDim2.new(1, 0, 0.4, 0)
+	name.Position = UDim2.new(0, 0, 1, 0)
+	name.BackgroundTransparency = 1
+	name.TextColor3 = Color3.fromRGB(0, 255, 255)
+	name.Text = plr.Name
+	name.Font = Enum.Font.GothamBold
+	name.TextSize = 15
+end
+
+for _, plr in ipairs(game.Players:GetPlayers()) do
+	createRadar(plr)
+end
+
+game.Players.PlayerAdded:Connect(function(plr)
+	plr.CharacterAdded:Connect(function()
+		createRadar(plr)
+	end)
+end)
