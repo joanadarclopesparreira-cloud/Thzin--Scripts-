@@ -1,0 +1,498 @@
+-- Thzin Premium v2 (FINAL)
+-- Key fixa: THZIN-PREMIUM-2025
+-- UI: Premium glass-like, animações
+-- Funcionalidades: AutoParry, AutoDash, AutoHeal, Speed, SuperJump, Fly/NoClip, Aimbot, HitboxExpander,
+-- Teleporte rápido para objetos, ESP Brainrot por raridade, radar, ESP players.
+-- Segurança: só ativa após validar Key. Debounce/checagens.
+
+local KEY_REQUIRED = "THZIN-PREMIUM-2025"
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Utility helpers
+local function uicorner(parent, radius) local c = Instance.new("UICorner", parent); c.CornerRadius = UDim.new(0, radius or 8); return c end
+local function uistroke(parent, color, thickness) local s = Instance.new("UIStroke", parent); s.Color = color or Color3.fromRGB(0,170,255); s.Thickness = thickness or 2; return s end
+local function safeWait(t) if t and t>0 then task.wait(t) end end
+local function isAlive(plr)
+    if not plr or not plr.Character then return false end
+    local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+    return hum and hum.Health and hum.Health > 0
+end
+
+-- Parent GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ThzinPremiumGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = PlayerGui
+
+-- ====== MAIN UI (premium glass feel) ======
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.new(0,420,0,520)
+Main.Position = UDim2.new(0.5, -210, 0.5, -260)
+Main.BackgroundColor3 = Color3.fromRGB(18,20,30)
+Main.BackgroundTransparency = 0.08
+Main.BorderSizePixel = 0
+Main.Visible = false
+Main.Parent = ScreenGui
+uicorner(Main, 16)
+uistroke(Main, Color3.fromRGB(80,170,255), 2)
+
+-- subtle blur-like (simulated with semi-transparent panels)
+local Glass = Instance.new("Frame", Main)
+Glass.Size = UDim2.new(1, -20, 1, -80)
+Glass.Position = UDim2.new(0,10,0,60)
+Glass.BackgroundTransparency = 0.4
+Glass.BackgroundColor3 = Color3.fromRGB(10,12,18)
+uicorner(Glass, 12)
+
+-- Title & info
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, -24, 0, 48)
+Title.Position = UDim2.new(0,12,0,8)
+Title.BackgroundTransparency = 1
+Title.Text = "THZIN PREMIUM v2"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
+Title.TextColor3 = Color3.fromRGB(190,240,255)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+local InfoLabel = Instance.new("TextLabel", Main)
+InfoLabel.Size = UDim2.new(1, -24, 0, 20)
+InfoLabel.Position = UDim2.new(0,12,0,36)
+InfoLabel.BackgroundTransparency = 1
+InfoLabel.Text = "Digite a key para liberar as funções"
+InfoLabel.Font = Enum.Font.Gotham
+InfoLabel.TextSize = 14
+InfoLabel.TextColor3 = Color3.fromRGB(160,200,230)
+InfoLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Toggle button (fixed on left)
+local Toggle = Instance.new("TextButton", ScreenGui)
+Toggle.Size = UDim2.new(0,64,0,64)
+Toggle.Position = UDim2.new(0, 14, 0.5, -32)
+Toggle.Text = "👾"
+Toggle.Font = Enum.Font.GothamBold
+Toggle.TextSize = 30
+Toggle.TextColor3 = Color3.fromRGB(255,255,255)
+Toggle.BackgroundColor3 = Color3.fromRGB(0,160,255)
+uicorner(Toggle, 12)
+
+local menuOpen = false
+local function setMenu(open)
+    menuOpen = open
+    if open then
+        Main.Visible = true
+        TweenService:Create(Main, TweenInfo.new(0.28, Enum.EasingStyle.Quad), {BackgroundTransparency = 0.08}):Play()
+    else
+        TweenService:Create(Main, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
+        task.delay(0.18, function() Main.Visible = false end)
+    end
+end
+Toggle.MouseButton1Click:Connect(function() setMenu(not menuOpen) end)
+UIS.InputBegan:Connect(function(inp, gpe) if not gpe and inp.KeyCode == Enum.KeyCode.L then Toggle:Activate() end end)
+
+-- ====== Key area ======
+local KeyBox = Instance.new("TextBox", Main)
+KeyBox.Size = UDim2.new(0.64, 0, 0, 36)
+KeyBox.Position = UDim2.new(0.03, 0, 0.12, 0)
+KeyBox.PlaceholderText = "Digite a key..."
+KeyBox.Font = Enum.Font.Gotham
+KeyBox.TextSize = 16
+KeyBox.TextColor3 = Color3.fromRGB(240,240,240)
+KeyBox.BackgroundColor3 = Color3.fromRGB(22,28,40)
+uicorner(KeyBox, 8)
+
+local KeyBtn = Instance.new("TextButton", Main)
+KeyBtn.Size = UDim2.new(0.28, 0, 0, 36)
+KeyBtn.Position = UDim2.new(0.69, 0, 0.12, 0)
+KeyBtn.Text = "VALIDAR"
+KeyBtn.Font = Enum.Font.GothamBold
+KeyBtn.TextSize = 16
+KeyBtn.BackgroundColor3 = Color3.fromRGB(0,160,255)
+KeyBtn.TextColor3 = Color3.fromRGB(20,20,20)
+uicorner(KeyBtn, 8)
+
+local AccessGranted = false
+
+KeyBtn.MouseButton1Click:Connect(function()
+    if KeyBox.Text == KEY_REQUIRED then
+        AccessGranted = true
+        KeyBtn.Text = "ACESSO ✔"
+        KeyBtn.BackgroundColor3 = Color3.fromRGB(0,220,140)
+        InfoLabel.Text = "Key válida — recursos liberados"
+        setMenu(true)
+    else
+        KeyBtn.Text = "ERRADO ❌"
+        KeyBtn.BackgroundColor3 = Color3.fromRGB(220,60,60)
+        InfoLabel.Text = "Key inválida"
+        task.delay(1.2, function() if not AccessGranted then KeyBtn.Text = "VALIDAR"; KeyBtn.BackgroundColor3 = Color3.fromRGB(0,160,255); InfoLabel.Text = "Digite a key para liberar as funções" end end)
+    end
+end)
+
+-- ====== Buttons area (on Glass) ======
+local buttons = {}
+local function createToggle(text, y)
+    local b = Instance.new("TextButton", Glass)
+    b.Size = UDim2.new(0.46, 0, 0, 36)
+    b.Position = UDim2.new(0.03 + (y%2==1 and 0 or 0.48), 0, 0.02 + (math.floor((y-1)/2) * 0.09), 0)
+    b.Text = text
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 14
+    b.BackgroundColor3 = Color3.fromRGB(18,24,34)
+    uicorner(b, 8)
+    uistroke(b, Color3.fromRGB(60,150,255), 1)
+    return b
+end
+
+-- buttons mapping (we will create many toggles)
+local btn_Save = createToggle("Salvar Localização", 1)
+local btn_Tp = createToggle("Ir para Localização", 2)
+local btn_Brain = createToggle("Marcar Brainrots", 3)
+local btn_Radar = createToggle("Radar Neon", 4)
+local btn_ESP = createToggle("ESP Players", 5)
+local btn_AutoParry = createToggle("Auto Parry", 6)
+local btn_AutoDash = createToggle("Auto Dash", 7)
+local btn_AutoHeal = createToggle("Auto Heal", 8)
+local btn_Speed = createToggle("Speed (toggle)", 9)
+local btn_SJump = createToggle("Super Jump", 10)
+local btn_Fly = createToggle("Fly/NoClip", 11)
+local btn_Aim = createToggle("Aimbot Assist", 12)
+local btn_Hitbox = createToggle("Hitbox Expander", 13)
+local btn_TeleportToObj = createToggle("TP → Objeto (selec.)", 14)
+local btn_ESP_Brain = createToggle("ESP Brainrots (raridade)", 15)
+
+-- small helper for enabled state
+local states = {}
+local function setState(btn, key, on)
+    states[key] = on and true or false
+    btn.BackgroundColor3 = on and Color3.fromRGB(0,190,140) or Color3.fromRGB(18,24,34)
+    btn.TextColor3 = on and Color3.fromRGB(20,20,20) or Color3.fromRGB(220,240,255)
+end
+-- ensure default false
+for i,btn in ipairs({btn_Save, btn_Tp, btn_Brain, btn_Radar, btn_ESP, btn_AutoParry, btn_AutoDash, btn_AutoHeal, btn_Speed, btn_SJump, btn_Fly, btn_Aim, btn_Hitbox, btn_TeleportToObj, btn_ESP_Brain}) do
+    setState(btn, "b"..i, false)
+end
+
+-- Save / Teleport storage
+local savedCFrame = nil
+
+-- ====== Core feature implementations (only run if AccessGranted) ======
+
+-- SAFE WRAPPERS
+local function requireAccess(fn)
+    return function(...)
+        if not AccessGranted then
+            InfoLabel.Text = "Valide a key para usar essa função"
+            return
+        end
+        return fn(...)
+    end
+end
+
+-- Save location
+btn_Save.MouseButton1Click:Connect(requireAccess(function()
+    local char = LocalPlayer.Character
+    if not char then InfoLabel.Text = "Sem personagem" return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then InfoLabel.Text = "Sem HumanoidRootPart" return end
+    savedCFrame = hrp.CFrame
+    InfoLabel.Text = "Localização salva"
+    setState(btn_Save, "save", true)
+end))
+
+-- Teleport to saved location (smooth)
+btn_Tp.MouseButton1Click:Connect(requireAccess(function()
+    if not savedCFrame then InfoLabel.Text = "Nenhuma posição salva"; return end
+    local char = LocalPlayer.Character
+    if not char then InfoLabel.Text = "Sem personagem"; return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then InfoLabel.Text = "Sem HumanoidRootPart"; return end
+    -- smooth teleport sequence (lerp)
+    local steps = 12
+    for i = 1, steps do
+        if not hrp.Parent then break end
+        hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)
+        hrp.CFrame = hrp.CFrame:Lerp(savedCFrame, 0.22)
+        task.wait(0.03)
+    end
+    hrp.CFrame = savedCFrame
+    InfoLabel.Text = "Teletransportado"
+end))
+
+-- Mark brainrots (ESP P)
+local function colorByRarity(part)
+    -- heuristic: name contains words like rare/god/secret/godly etc.
+    local n = part.Name:lower()
+    if n:find("god") or n:find("godly") then return Color3.fromRGB(255,200,50) end
+    if n:find("secret") or n:find("sacred") or n:find("rare") then return Color3.fromRGB(255,100,120) end
+    if n:find("common") then return Color3.fromRGB(120,200,255) end
+    return Color3.fromRGB(255,120,80)
+end
+
+btn_Brain.MouseButton1Click:Connect(requireAccess(function()
+    local found = 0
+    for _,v in pairs(workspace:GetDescendants()) do
+        if v:IsA("BasePart") and v.Name:lower():find("brain") then
+            if not v:FindFirstChild("Thzin_BrainMark") then
+                local bill = Instance.new("BillboardGui", v)
+                bill.Name = "Thzin_BrainMark"
+                bill.Size = UDim2.new(0,52,0,52)
+                bill.AlwaysOnTop = true
+                local lbl = Instance.new("TextLabel", bill)
+                lbl.Size = UDim2.new(1,1,1,1)
+                lbl.BackgroundTransparency = 1
+                lbl.Text = "❗"
+                lbl.Font = Enum.Font.GothamBold
+                lbl.TextScaled = true
+                lbl.TextColor3 = colorByRarity(v)
+                found = found + 1
+            end
+        end
+    end
+    InfoLabel.Text = "Brainrots marcados: "..tostring(found)
+    setState(btn_Brain, "brain", true)
+end))
+
+-- RADAR & ESP players
+local radarFolder = Instance.new("Folder", ScreenGui); radarFolder.Name = "ThzinRadar"
+local espFolder = Instance.new("Folder", ScreenGui); espFolder.Name = "ThzinESP"
+
+local radarConns = {}
+local espConns = {}
+
+local function createRadarFor(plr)
+    if plr == LocalPlayer then return end
+    if radarFolder:FindFirstChild(plr.Name.."_marker") then return end
+    if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then return end
+    local marker = Instance.new("BillboardGui")
+    marker.Name = plr.Name.."_marker"
+    marker.Adornee = plr.Character.HumanoidRootPart
+    marker.Size = UDim2.new(0,150,0,48)
+    marker.AlwaysOnTop = true
+    marker.Parent = radarFolder
+    local frame = Instance.new("Frame", marker)
+    frame.Size = UDim2.new(1,0,1,0)
+    frame.BackgroundTransparency = 0.4
+    frame.BackgroundColor3 = Color3.fromRGB(0,100,200)
+    uicorner(frame, 12)
+    local name = Instance.new("TextLabel", frame)
+    name.Size = UDim2.new(1,-8,0,20); name.Position = UDim2.new(0,4,0,2)
+    name.BackgroundTransparency = 1; name.Font = Enum.Font.GothamBold; name.TextSize = 14; name.TextColor3 = Color3.fromRGB(230,255,255)
+    name.Text = plr.Name
+    local dist = Instance.new("TextLabel", frame)
+    dist.Size = UDim2.new(1,-8,0,18); dist.Position = UDim2.new(0,4,0,22)
+    dist.BackgroundTransparency = 1; dist.Font = Enum.Font.Gotham; dist.TextSize = 13; dist.TextColor3 = Color3.fromRGB(190,230,255)
+    dist.Text = "0m"
+    local conn = RunService.RenderStepped:Connect(function()
+        if not plr.Parent or not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then
+            conn:Disconnect()
+            if marker and marker.Parent then marker:Destroy() end
+            return
+        end
+        local myhrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if myhrp then
+            local d = (myhrp.Position - plr.Character.HumanoidRootPart.Position).Magnitude
+            dist.Text = tostring(math.floor(d)).."m"
+        end
+    end)
+    radarConns[plr.UserId] = conn
+end
+
+local function removeAllRadar()
+    for _,c in pairs(radarFolder:GetChildren()) do pcall(function() c:Destroy() end) end
+    for k,v in pairs(radarConns) do if v then v:Disconnect() end end
+    radarConns = {}
+end
+
+btn_Radar.MouseButton1Click:Connect(requireAccess(function()
+    states.radar = not (states.radar or false)
+    if states.radar then
+        InfoLabel.Text = "Radar: ON"
+        for _,plr in pairs(Players:GetPlayers()) do pcall(function() createRadarFor(plr) end) end
+    else
+        InfoLabel.Text = "Radar: OFF"
+        removeAllRadar()
+    end
+    setState(btn_Radar, "radar", states.radar)
+end))
+
+-- ESP players
+local function createESPFor(plr)
+    if plr==LocalPlayer then return end
+    if not plr.Character or not plr.Character:FindFirstChild("Head") then return end
+    if plr.Character.Head:FindFirstChild("Thzin_ESP") then return end
+    local bill = Instance.new("BillboardGui", plr.Character.Head)
+    bill.Name = "Thzin_ESP"
+    bill.Size = UDim2.new(0,120,0,36)
+    bill.AlwaysOnTop = true
+    local lab = Instance.new("TextLabel", bill)
+    lab.Size = UDim2.new(1,0,1,0)
+    lab.BackgroundTransparency = 1
+    lab.Font = Enum.Font.GothamBold
+    lab.TextSize = 14
+    lab.TextColor3 = Color3.fromRGB(0,240,255)
+    lab.Text = plr.Name
+end
+
+local function removeAllESP()
+    for _,plr in pairs(Players:GetPlayers()) do
+        pcall(function()
+            if plr.Character and plr.Character:FindFirstChild("Head") then
+                local gg = plr.Character.Head:FindFirstChild("Thzin_ESP")
+                if gg then gg:Destroy() end
+            end
+        end)
+    end
+end
+
+btn_ESP.MouseButton1Click:Connect(requireAccess(function()
+    states.esp = not (states.esp or false)
+    if states.esp then
+        InfoLabel.Text = "ESP: ON"
+        for _,plr in pairs(Players:GetPlayers()) do pcall(function() createESPFor(plr) end) end
+    else
+        InfoLabel.Text = "ESP: OFF"
+        removeAllESP()
+    end
+    setState(btn_ESP, "esp", states.esp)
+end))
+
+-- maintain on join
+Players.PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Connect(function()
+        if states.radar then pcall(function() createRadarFor(plr) end) end
+        if states.esp then pcall(function() createESPFor(plr) end) end
+    end)
+end)
+
+-- ====== AUTO and combat utilities ======
+
+-- simple safe function to find nearest target (for aimbot/hitbox)
+local function getNearestTarget(maxRange)
+    local best, bestDist = nil, (maxRange or 1000)
+    local mypos = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character.HumanoidRootPart.Position
+    if not mypos then return nil end
+    for _,plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and isAlive(plr) then
+            local d = (mypos - plr.Character.HumanoidRootPart.Position).Magnitude
+            if d < bestDist then bestDist = d; best = plr end
+        end
+    end
+    return best, bestDist
+end
+
+-- Hitbox Expander (simple approach: scale player's HumanoidRootPart or head size attachments)
+local hitboxConns = {}
+btn_Hitbox.MouseButton1Click:Connect(requireAccess(function()
+    states.hitbox = not (states.hitbox or false)
+    if states.hitbox then
+        InfoLabel.Text = "Hitbox: ON"
+        for _,plr in pairs(Players:GetPlayers()) do
+            if plr~=LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                pcall(function()
+                    local hrp = plr.Character.HumanoidRootPart
+                    if not hrp:FindFirstChild("Thzin_Hit") then
+                        local prox = Instance.new("Part")
+                        prox.Name = "Thzin_Hit"
+                        prox.Transparency = 1
+                        prox.CanCollide = false
+                        prox.Size = hrp.Size * Vector3.new(1.6,1.6,1.6)
+                        prox.CFrame = hrp.CFrame
+                        prox.Parent = hrp
+                        table.insert(hitboxConns, prox)
+                    end
+                end)
+            end
+        end
+    else
+        InfoLabel.Text = "Hitbox: OFF"
+        for _,p in pairs(hitboxConns) do pcall(function() p:Destroy() end) end
+        hitboxConns = {}
+    end
+    setState(btn_Hitbox, "hitbox", states.hitbox)
+end))
+
+-- Aimbot Assist (gentle): points humanoid root rotation toward target (non-destructive)
+local aimConn = nil
+btn_Aim.MouseButton1Click:Connect(requireAccess(function()
+    states.aim = not (states.aim or false)
+    if states.aim then
+        InfoLabel.Text = "Aimbot: ON (assist)"
+        aimConn = RunService.RenderStepped:Connect(function()
+            local target = getNearestTarget(1000)
+            if target and target.Character and target.Character:FindFirstChild("Head") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local myhrp = LocalPlayer.Character.HumanoidRootPart
+                local targPos = target.Character.Head.Position
+                -- smooth lookAt
+                local dir = (targPos - myhrp.Position).Unit
+                local look = CFrame.new(myhrp.Position, myhrp.Position + dir)
+                -- small lerp for smoothness
+                myhrp.CFrame = CFrame.new(myhrp.Position, myhrp.Position + dir) * CFrame.new(0,0,0)
+            end
+        end)
+    else
+        InfoLabel.Text = "Aimbot: OFF"
+        if aimConn then aimConn:Disconnect(); aimConn = nil end
+    end
+    setState(btn_Aim, "aim", states.aim)
+end))
+
+-- Auto Parry / Dash / Heal basic implementations (these are placeholders that call actions if your game exposes remote events)
+-- We'll implement safe generic logic: try to find Remotes by common names; if not found, show message.
+
+local function findRemoteByNames(names)
+    for _,n in ipairs(names) do
+        local ok, r = pcall(function() return game:GetService("ReplicatedStorage"):FindFirstChild(n) end)
+        if ok and r then return r end
+        -- also try in workspace or game
+        if game:FindFirstChild(n, true) then return game:FindFirstChild(n, true) end
+    end
+    return nil
+end
+
+-- attempt to detect common remotes (best-effort)
+local parryRemote = findRemoteByNames({"ParryEvent","Parry","parry","RemoteParry"})
+local dashRemote = findRemoteByNames({"DashEvent","Dash","dash","RemoteDash"})
+local healRemote = findRemoteByNames({"HealEvent","Heal","heal","RemoteHeal"})
+
+-- AutoParry
+local parryConn = nil
+btn_AutoParry.MouseButton1Click:Connect(requireAccess(function()
+    states.parry = not (states.parry or false)
+    if states.parry then
+        InfoLabel.Text = "Auto Parry: ON (listening)"
+        parryConn = RunService.RenderStepped:Connect(function()
+            -- simple heuristic: if any player within 8 studs and attacking (can't detect reliably), try parry
+            local nearest, dist = getNearestTarget(12)
+            if nearest and dist < 8 and parryRemote then
+                pcall(function() parryRemote:FireServer() end)
+            end
+        end)
+    else
+        InfoLabel.Text = "Auto Parry: OFF"
+        if parryConn then parryConn:Disconnect(); parryConn = nil end
+    end
+    setState(btn_AutoParry, "parry", states.parry)
+end))
+
+-- AutoDash
+local dashConn = nil
+btn_AutoDash.MouseButton1Click:Connect(requireAccess(function()
+    states.dash = not (states.dash or false)
+    if states.dash then
+        InfoLabel.Text = "Auto Dash: ON"
+        dashConn = RunService.RenderStepped:Connect(function()
+            local nearest, dist = getNearestTarget(40)
+            if nearest and dist < 25 and dashRemote then
+                pcall(function() dashRemote:FireServer() end)
+            end
+        end)
+    els
